@@ -14,8 +14,9 @@ function Game() {
     lives: 3,
     level: 1,
     timeLeft: 15,
-    isPlaying: true,
-    bombs: 0 // Bomba sayısı
+    isPlaying: false,
+    bombs: 0,
+    hasStarted: false
   });
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [explodingGhosts, setExplodingGhosts] = useState([]); // Patlayan hayaletler
@@ -104,8 +105,8 @@ function Game() {
 
   // Hayaletleri oluştur
   const generateGhosts = useCallback(() => {
-    const ghostCount = gameState.level + 2;
-    const baseSpeed = Math.min(2 * (1 + (gameState.level - 1) * 0.1), 
+    const ghostCount = Math.floor(gameState.level) + 2;
+    const baseSpeed = Math.min(2 * (1 + (Math.floor(gameState.level) - 1) * 0.1), 
                               Math.min(gameBounds.width, gameBounds.height) * 0.01);
     
     const newGhosts = [];
@@ -125,26 +126,30 @@ function Game() {
   const checkLevelComplete = useCallback(() => {
     if (showLevelUp) return;
     
-    const levelBonus = Math.floor(gameState.level) * 5; // 5 katı bonus
-    const displayBonus = Math.floor(gameState.level) * 10; // Ekranda 10 katı göster
-    setShowLevelUp(true);
+    const levelBonus = Math.floor(gameState.level) * 5;
+    const displayBonus = Math.floor(gameState.level) * 10;
+    
+    // State güncellemelerini tek seferde yap
     setGameState(prev => ({
       ...prev,
-      level: prev.level + 0.5,
+      level: Math.floor(prev.level + 1), // 0.5 yerine tam sayı artış
       timeLeft: 15,
       score: prev.score + levelBonus
     }));
+    
+    setShowLevelUp(true);
 
+    // Level up animasyonunu göster
     const levelUpDiv = document.createElement('div');
     levelUpDiv.className = 'level-up-animation';
     levelUpDiv.innerHTML = `Level Up!<br/><span class="bonus-points">+${displayBonus} Puan!</span>`;
-    document.querySelector('.game-area').appendChild(levelUpDiv);
+    document.querySelector('.game-area')?.appendChild(levelUpDiv);
 
     setTimeout(() => {
       levelUpDiv.remove();
       setShowLevelUp(false);
     }, 2000);
-  }, [showLevelUp, gameState.level]);
+  }, [showLevelUp]);
 
   // Can azaltma kontrolü
   const loseLife = useCallback(() => {
@@ -172,37 +177,37 @@ function Game() {
   useEffect(() => {
     if (!gameState.isPlaying || showLevelUp) return;
 
-    let timer = null;
-    
-    // Sadece oyun aktifken ve level up gösterilmiyorken süreyi azalt
-    if (gameState.timeLeft > 0 && !showLevelUp) {
-      timer = setInterval(() => {
-        setGameState(prev => ({
-          ...prev,
-          timeLeft: prev.timeLeft - 1
-        }));
-      }, 1000);
-    } else if (gameState.timeLeft <= 0) {
-      const targetGhosts = gameState.level + 2;
-      const killedGhosts = targetGhosts - ghosts.length;
-      
-      if (killedGhosts < targetGhosts) {
-        loseLife();
-      } else {
-        checkLevelComplete();
-      }
-    }
+    const timer = setInterval(() => {
+      setGameState(prev => {
+        const newTimeLeft = prev.timeLeft - 1;
+        
+        if (newTimeLeft <= 0) {
+          clearInterval(timer);
+          const targetGhosts = Math.floor(prev.level) + 2;
+          const killedGhosts = targetGhosts - ghosts.length;
+          
+          if (killedGhosts < targetGhosts) {
+            loseLife();
+          } else {
+            checkLevelComplete();
+          }
+          return { ...prev, timeLeft: 0 };
+        }
+        
+        return { ...prev, timeLeft: newTimeLeft };
+      });
+    }, 1000);
 
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [gameState.isPlaying, gameState.timeLeft, showLevelUp, loseLife, checkLevelComplete]);
+    return () => clearInterval(timer);
+  }, [gameState.isPlaying, showLevelUp, ghosts.length, loseLife, checkLevelComplete]);
 
-  // Hayalete tıklama - Sabit 10 puan için düzeltme
+  // Hayalete tıklama - Sabit 10 puan
   const handleGhostClick = (ghostId) => {
+    if (!gameState.isPlaying || showLevelUp) return;
+    
     setGhosts(prevGhosts => {
       const newGhosts = prevGhosts.filter(ghost => ghost.id !== ghostId);
-      const targetGhosts = gameState.level + 2;
+      const targetGhosts = Math.floor(gameState.level) + 2;
       const killedGhosts = targetGhosts - newGhosts.length;
       
       if (killedGhosts >= targetGhosts) {
@@ -221,6 +226,16 @@ function Game() {
     }));
   };
 
+  // Oyunu başlat
+  const startGame = () => {
+    setGameState(prev => ({
+      ...prev,
+      isPlaying: true,
+      hasStarted: true
+    }));
+    generateGhosts();
+  };
+
   // Oyunu yeniden başlat
   const restartGame = () => {
     setGameState({
@@ -228,15 +243,17 @@ function Game() {
       lives: 3,
       level: 1,
       timeLeft: 15,
-      isPlaying: true
+      isPlaying: false,
+      hasStarted: false,
+      bombs: 0
     });
     setShowLevelUp(false);
-    generateGhosts();
+    setGhosts([]);
   };
 
   // Oyun bitişini kontrol et
   useEffect(() => {
-    if (!gameState.isPlaying) {
+    if (!gameState.isPlaying && gameState.hasStarted && gameState.lives <= 0) {
       const gameOverDiv = document.createElement('div');
       gameOverDiv.className = 'game-over-animation';
       gameOverDiv.textContent = 'GAME OVER';
@@ -248,17 +265,18 @@ function Game() {
         restartGame();
       }, 3000);
     }
-  }, [gameState.isPlaying]);
+  }, [gameState.isPlaying, gameState.hasStarted, gameState.lives]);
 
   // Seviye değiştiğinde yeni hayaletler oluştur
   useEffect(() => {
-    if (gameState.isPlaying) {
-      const delay = showLevelUp ? 2000 : 0;
-      setTimeout(() => {
-        generateGhosts();
-      }, delay);
-    }
-  }, [gameState.level, generateGhosts]);
+    if (!gameState.isPlaying || !showLevelUp) return;
+    
+    const timer = setTimeout(() => {
+      generateGhosts();
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [gameState.level, gameState.isPlaying, showLevelUp, generateGhosts]);
 
   // Hayaletleri hareket ettir
   useEffect(() => {
@@ -300,8 +318,8 @@ function Game() {
     return () => clearInterval(moveGhosts);
   }, [gameState.isPlaying, showLevelUp, isFrozen, gameBounds]);
 
-  // targetGhosts değişkenini tanımlayalım
-  const targetGhosts = gameState.level + 2;
+  // targetGhosts hesaplamasını düzelt
+  const targetGhosts = Math.floor(gameState.level) + 2;
 
   // Ekran boyutu değiştiğinde sınırları güncelle
   useEffect(() => {
@@ -435,25 +453,35 @@ function Game() {
           </div>
         </div>
         <div className="game-area" ref={gameAreaRef}>
-          {showLevelUp && (
-            <div className="level-up-animation">
-              Level Up!
+          {!gameState.hasStarted ? (
+            <div className="start-screen">
+              <button className="start-button" onClick={startGame}>
+                Oyunu Başlat
+              </button>
             </div>
+          ) : (
+            <>
+              {showLevelUp && (
+                <div className="level-up-animation">
+                  Level Up!
+                </div>
+              )}
+              {!showLevelUp && ghosts.map(ghost => (
+                <div
+                  key={ghost.id}
+                  className={`ghost ${explodingGhosts.includes(ghost.id) ? 'exploding' : ''} ${isFrozen ? 'frozen' : ''}`}
+                  style={{
+                    left: `${ghost.x}px`,
+                    top: `${ghost.y}px`
+                  }}
+                  onClick={() => handleGhostClick(ghost.id)}
+                >
+                  <span className="character">{selectedCharacter}</span>
+                  {isFrozen && <span className="freeze-effect">❄️</span>}
+                </div>
+              ))}
+            </>
           )}
-          {!showLevelUp && ghosts.map(ghost => (
-            <div
-              key={ghost.id}
-              className={`ghost ${explodingGhosts.includes(ghost.id) ? 'exploding' : ''} ${isFrozen ? 'frozen' : ''}`}
-              style={{
-                left: `${ghost.x}px`,
-                top: `${ghost.y}px`
-              }}
-              onClick={() => handleGhostClick(ghost.id)}
-            >
-              <span className="character">{selectedCharacter}</span>
-              {isFrozen && <span className="freeze-effect">❄️</span>}
-            </div>
-          ))}
         </div>
       </div>
     </div>
