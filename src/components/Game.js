@@ -110,9 +110,10 @@ function Game() {
                               Math.min(gameBounds.width, gameBounds.height) * 0.01);
     
     const newGhosts = [];
+    const timestamp = Date.now();
     for (let i = 0; i < ghostCount; i++) {
       newGhosts.push({
-        id: i,
+        id: timestamp + i,
         x: Math.random() * (gameBounds.width - 50),
         y: Math.random() * (gameBounds.height - 50),
         speedX: (Math.random() - 0.5) * baseSpeed,
@@ -129,17 +130,16 @@ function Game() {
     const levelBonus = Math.floor(gameState.level) * 5;
     const displayBonus = Math.floor(gameState.level) * 10;
     
-    // State güncellemelerini tek seferde yap
+    setShowLevelUp(true);
+    setGhosts([]); // Mevcut hayaletleri temizle
+
     setGameState(prev => ({
       ...prev,
-      level: Math.floor(prev.level + 1), // 0.5 yerine tam sayı artış
+      level: Math.floor(prev.level + 1),
       timeLeft: 15,
       score: prev.score + levelBonus
     }));
-    
-    setShowLevelUp(true);
 
-    // Level up animasyonunu göster
     const levelUpDiv = document.createElement('div');
     levelUpDiv.className = 'level-up-animation';
     levelUpDiv.innerHTML = `Level Up!<br/><span class="bonus-points">+${displayBonus} Puan!</span>`;
@@ -148,8 +148,9 @@ function Game() {
     setTimeout(() => {
       levelUpDiv.remove();
       setShowLevelUp(false);
+      generateGhosts(); // Yeni hayaletleri oluştur
     }, 2000);
-  }, [showLevelUp]);
+  }, [showLevelUp, gameState.level, generateGhosts]);
 
   // Can azaltma kontrolü
   const loseLife = useCallback(() => {
@@ -205,25 +206,22 @@ function Game() {
   const handleGhostClick = (ghostId) => {
     if (!gameState.isPlaying || showLevelUp) return;
     
-    setGhosts(prevGhosts => {
-      const newGhosts = prevGhosts.filter(ghost => ghost.id !== ghostId);
-      const targetGhosts = Math.floor(gameState.level) + 2;
-      const killedGhosts = targetGhosts - newGhosts.length;
-      
-      if (killedGhosts >= targetGhosts) {
-        setTimeout(() => {
-          checkLevelComplete();
-        }, 0);
-      }
-      
-      return newGhosts;
-    });
-    
     // Her seviyede sabit 10 puan
     setGameState(prev => ({
       ...prev,
       score: prev.score + 10
     }));
+
+    setGhosts(prevGhosts => {
+      const newGhosts = prevGhosts.filter(ghost => ghost.id !== ghostId);
+      if (newGhosts.length === 0) {
+        // Son hayalet öldürüldüğünde hemen seviye atla
+        setTimeout(() => {
+          checkLevelComplete();
+        }, 0);
+      }
+      return newGhosts;
+    });
   };
 
   // Oyunu başlat
@@ -231,7 +229,8 @@ function Game() {
     setGameState(prev => ({
       ...prev,
       isPlaying: true,
-      hasStarted: true
+      hasStarted: true,
+      timeLeft: 15
     }));
     generateGhosts();
   };
@@ -269,13 +268,9 @@ function Game() {
 
   // Seviye değiştiğinde yeni hayaletler oluştur
   useEffect(() => {
-    if (!gameState.isPlaying || !showLevelUp) return;
+    if (!gameState.isPlaying || showLevelUp) return;
     
-    const timer = setTimeout(() => {
-      generateGhosts();
-    }, 2000);
-
-    return () => clearTimeout(timer);
+    generateGhosts();
   }, [gameState.level, gameState.isPlaying, showLevelUp, generateGhosts]);
 
   // Hayaletleri hareket ettir
