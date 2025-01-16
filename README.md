@@ -1,70 +1,59 @@
-# Getting Started with Create React App
+# Hayalet Avcısı Oyunu
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Hayalet Avcısı, web tabanlı bir arcade oyunudur. Oyuncular hayaletleri yakalayarak puan kazanır ve çeşitli güçlendirmeler satın alabilir.
 
-## Available Scripts
+## Özellikler
 
-In the project directory, you can run:
+- Seviye sistemi
+- Farklı karakterler (satın alınabilir)
+- Güçlendirmeler:
+  - Bomba (1000 puan) - Yakındaki hayaletleri yok eder
+  - Can (1500 puan) - Ekstra can kazandırır
+  - Buz (600 puan) - Hayaletleri yavaşlatır
+- Responsive tasarım
+- Animasyonlar ve efektler
 
-### `npm start`
+## Oynanış
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Her seviyede belirli sayıda hayalet yakalamanız gerekir
+- Süre dolmadan hedefi tamamlamalısınız
+- Süre dolduğunda ve hedef tamamlanmadığında can kaybedersiniz
+- 3 canınız var
+- Her hayalet vuruşu 10 puan kazandırır
+- Seviye atladıkça bonus puan kazanırsınız
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Karakterler
 
-### `npm test`
+- Hayalet (Ücretsiz)
+- Uçak (1000 puan)
+- Kuş (1000 puan)
+- Balon (1000 puan)
+- Bulut (1000 puan)
+- Uçurtma (1000 puan)
+- Yıldız (1000 puan)
+- Şemsiye (1000 puan)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Teknolojiler
 
-### `npm run build`
+- React.js
+- CSS3
+- HTML5
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Kurulum
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. Repoyu klonlayın:
+bash
+git clone [repo-url]
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Bağımlılıkları yükleyin:
+bash
+npm install
 
-### `npm run eject`
+3. Geliştirme sunucusunu başlatın:
+bash
+npm start
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Lisans
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+MIT
