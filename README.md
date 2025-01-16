@@ -1,6 +1,8 @@
-# Hayalet Avcısı Oyunu
+# Hayalet Avcısı Oyunu Yayınlandı!!!!     https://ghost-hunter-vert.vercel.app/
 
 Hayalet Avcısı, web tabanlı bir arcade oyunudur. Oyuncular hayaletleri yakalayarak puan kazanır ve çeşitli güçlendirmeler satın alabilir.
+
+
 
 ## Özellikler
 
